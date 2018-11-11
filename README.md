@@ -1,3 +1,6 @@
+HERMES
+------
+
 Demonstration video: https://www.youtube.com/watch?v=JIMlrOTUWKE&t=216s
 
 HERMES is a rechargeable self-balancing electric skateboard, mainly for personal transportation (inspired by the Segway). It can easily balance itself on its two wheels placed along its center, so that an user can easily mount HERMES for personal transport. A wired or wireless remote controller is available for the user to control the speed and direction of HERMES, depending on the user's preference. Also, an emergency kill switch is present to turn HERMES off for safety.
