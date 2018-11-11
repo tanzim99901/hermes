@@ -41,4 +41,5 @@ The motors used in this were salvaged from old parts and do not have enough spee
 
 Also, using pneumatic tyres instead of the old wheels will greatly improve its performance. Furthermore, instead of using a skateboard, the whole chassis can be built from scratch in order to fully customize it. Also, the chain and gear system of motor-wheel drive can be replaced with only gear system, which is more costly and complex, but also more effective.
 
-
+Footnote: Lead acid battery charger was not available in the market. So, one had to be made. For that, a 12V 3A transformer, a
+10A bridge rectifier and some 100uF 50V capacitors were used. The 220V DC was transformed to 12V DC using a transformer and a bridge rectifier was used to rectify that to about 18V DC. 3 capacitors were used in parallel to smoothen the rectified dc. 
