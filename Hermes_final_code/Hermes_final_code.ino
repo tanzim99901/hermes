@@ -39,7 +39,7 @@
 MPU6050 mpu;
 int counter = 0;
 #define OUTPUT_READABLE_YAWPITCHROLL
-#define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
+#define LED_PIN 13 // 
 bool blinkState = false;
 
 // MPU control/status vars
@@ -85,12 +85,12 @@ float gyroscalingfactor = 1.0;  //strange constant. It is best thought of as the
 //Increase the value of Start_Balance_Point to bring the initial balance point further backwards
 float Start_Balance_point = 0;
 
-float P_constant = 40;  //previously 4.5
-float D_constant = 0; //previously 0.5
-float I_constant = 2;  //previously 1.0
+float P_constant = 40;  // proportional
+float D_constant = 0; // derivative
+float I_constant = 2;  // integral
 
-float overallgaintarget = 0.6;   //previously 0.6
-float overallgainstart = 0.3; //starting value before softstart 0.3
+float overallgaintarget = 0.6;
+float overallgainstart = 0.3;
 const int AvgAngles = 5;
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX END OF USER ADJUSTABLE VARIABLES XXXXXXXXXXXXXX
 
@@ -189,16 +189,8 @@ void setup()
 #endif
 
   // initialize serial communication
-  // (115200 chosen because it is required for Teapot Demo output, but it's
-  // really up to you depending on your project)
   Serial.begin(115200);
-  while (!Serial); // wait for Leonardo enumeration, others continue immediately
-
-  // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3v or Ardunio
-  // Pro Mini running at 3.3v, cannot handle this baud rate reliably due to
-  // the baud timing being too misaligned with processor ticks. You must use
-  // 38400 or slower in these cases, or use some kind of external separate
-  // crystal solution for the UART timer.
+  while (!Serial); // wait for serial
 
   // initialize device
   Serial.println(F("Initializing I2C devices..."));
@@ -208,12 +200,6 @@ void setup()
   Serial.println(F("Testing device connections..."));
   Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 
-  // wait for ready
-  /*Serial.println(F("\nSend any character to begin DMP programming and demo: "));
-    while (Serial.available() && Serial.read()); // empty buffer
-    while (!Serial.available());                 // wait for data
-    while (Serial.available() && Serial.read()); // empty buffer again*/
-
   // load and configure the DMP
   Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
@@ -222,7 +208,7 @@ void setup()
   mpu.setXGyroOffset(220);
   mpu.setYGyroOffset(76);
   mpu.setZGyroOffset(-85);
-  mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+  mpu.setZAccelOffset(1788); // 1788 factory default for my test chip
 
   // make sure it worked (returns 0 if so)
   if (devStatus == 0) {
@@ -257,12 +243,10 @@ void setup()
 
   //kill motors when first switched on
   motor_stop();
-  //read_gyro();
 }
 
 void loop()
 {
-  //read_gyro();
   tipstart = 0;
   overallgain = 0;
   cur_speed = 0;
@@ -275,18 +259,14 @@ void loop()
 
   //Tilt board one end on floor. Turn it on and let go i.e. stop wobbling it about
   //as now the software will read the gyro values 200 times when there is no rotational movement to find the average zero point for each gyro.
-  //delay(2000);
-  //Serial.println("Sampling inputs");
 
-  //delay(100);
   for (i = 0; i < 200; i++) {
     //read_gyro();
     sample_inputs();
   }
-  //delay(2000);
-  //read_gyro();
+
   Serial.println("Sampling finished");
-  //delay(2000);
+
   digitalWrite(ledonePin, HIGH);
   digitalWrite(ledtwoPin, HIGH);
 
@@ -302,9 +282,10 @@ void loop()
     sample_inputs();
 
   }
+
   Serial.println("Loop timing done");
-  //delay(2000);
-  while (tipstart < 5) {  //don't know why I chose 5 but there we are
+
+  while (tipstart < 5) {
     //XXXXXXXXXXXXXXXXXXXXX TIMEKEEPER      loop timing control keeps it at 100 cycles per second XXXXXXXXXXXXXXX
     lastLoopUsefulTime = millis() - loopStartTime;
     if (lastLoopUsefulTime < STD_LOOP_TIME) {
@@ -336,8 +317,7 @@ void loop()
 
   overallgain = overallgainstart;  //softstart value. Gain will now rise to final of 0.6 at rate of 0.005 per program loop.
   //i.e. it will go from 0.3 to 0.6 over the first 4 seconds or so after tipstart has been activated
-  //Serial.println(overallgain);
-  //delay(2000);
+
   angle = 0;
   cur_speed = 0;
   Steering = 512;
@@ -356,28 +336,7 @@ void loop()
 
   while (1)
   {
-    /*if (counter == 100)
-      {
-      //sample_inputs();
-      //while (1);
-      //set_motor();
-      Serial.println("MOTOR STATUS");
-      Serial.println(level);
-      Serial.println(Steer);
-      Serial.println(cSpeedVal_Motor1);
-      Serial.println(cSpeedVal_Motor2);
-      Serial.println(Motor1percent);
-      Serial.println(Motor2percent);
-      while (1);
-      }*/
-
-    /*motor_drive(left, forward, 255);
-      motor_drive(right, forward, 255);
-      delay(3000);
-      motor_drive(left, backward, 255);
-      motor_drive(right, backward, 255);
-      delay(3000);*/
-      drive_mode();
+    drive_mode();
   }
 }
 
@@ -389,10 +348,8 @@ void stop_mode()
 void drive_mode()
 {
   Serial.println("ENTER MODE");
-  //delay(200000);
   sample_inputs();
   Serial.println("Sample function");
-  //delay(2000);
   set_motor();
 
   //XXXXXXXXXXXXXXXXXXXXX loop timing control keeps it at 100 cycles per second XXXXXXXXXXXXXXX
@@ -404,7 +361,6 @@ void drive_mode()
   loopStartTime = millis();
   //XXXXXXXXXXXXXXXXXXXXXX end of loop timing control XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   Serial.println("DONE");
-  //delay(2000);
   serialOut_timing();//updates the LED status every now and then (one means sending >50% of full power to motors.
   //Two LED's lit means sending > 75% of full power to motors and you need to slow down.
 
@@ -418,8 +374,6 @@ void drive_mode()
   }
   //XXXXXXXXXXXXXXX end of softstart code XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   Serial.println(overallgain);
-  //counter++;
-  //delay(5000);
 
 }
 // ================================================================
@@ -436,9 +390,6 @@ void read_gyro()
     // .
     // .
     // .
-    // if you are really paranoid you can frequently test in between other
-    // stuff to see if mpuInterrupt is true, and if so, "break;" from the
-    // while() loop to immediately process the MPU data
     // .
     // .
     // .
@@ -459,8 +410,6 @@ void read_gyro()
     mpu.resetFIFO();
     Serial.println(F("FIFO overflow!"));
     delay(3000);
-    //read_gyro();
-
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
   }
   else if (mpuIntStatus & 0x02)
@@ -511,32 +460,14 @@ void motor_stop()
 
 void updateAngle() {
   read_gyro();
-  //sixDOF.getYawPitchRoll(angles);
-  /*prevAngles[prevAngleI] = ypr[1];
-    prevAngleI = (prevAngleI + 1) % AvgAngles;
-    float sum = 0;
-    for (int i = 0; i < AvgAngles; i++)
-    sum += prevAngles[i];
-    currAngle = sum / AvgAngles;
-    prevAngle = currAngle;
-    Serial.println(AvgAngles);
-    Serial.println(sum);
 
-    Serial.println(currAngle);
-    Serial.println(prevAngleI);
-    //Serial.println(AvgAngles);
-    delay(20000);*/
   prevAngles[prevAngleI] = ypr[1];
   prevAngle = currAngle;
   currAngle = prevAngles[prevAngleI] - AvgAngles;
-  //Serial.println(currAngle);
-  //Serial.println(prevAngleI);
-  //delay(20000);
 }
 
 void sample_inputs()
 {
-  //int leftbuttonPin = 40;
   k4 = digitalRead(deadmanbuttonPin); //1 when not pressed and 0 when is being pressed
   k5 = digitalRead(leftbuttonPin);
   k6 = digitalRead(rightbuttonPin);
@@ -618,12 +549,9 @@ void sample_inputs()
   Serial.println(cur_speed);
   Serial.println(level);
   Serial.println(overallgain);
-  //while(1);
 }
 
 void set_motor()   {
-  //unsigned char cSpeedVal_Motor1 = 0;
-  //unsigned char cSpeedVal_Motor2 = 0;
 
   level = level * 200; //changes it to a scale of about -100 to +100
   if (level < -100) {
@@ -654,17 +582,17 @@ void set_motor()   {
   if (Motor2percent > 100) Motor2percent = 100;
   if (Motor2percent < -100) Motor2percent = -100;
 
-  /*if (k4 == 1)
-    {
+  if (k4 == 1)    //deadman button
+  {
     cut = cut - 1;
     if (cut < 0)
     {
       cut = 0;
     }
-    }
+  }
 
-    if (cut == 0)
-    {
+  if (cut == 0)
+  {
     level = 0;
     Steer = 0;
     motor_stop();
@@ -680,47 +608,7 @@ void set_motor()   {
       pinMode(ledonePin, LOW);
       pinMode(ledtwoPin, LOW);
     } // end of while 1
-    }*/
-  /*
-    //if not pressing deadman button on hand controller - cut everything
-    if (k4 == 0) { //is 0 when you ARENT pressing the deadman button
-    cut = cut - 1;
-    if (cut < 0) {
-      cut = 0;
-    }
-    }
-    if (k4 == 1) { //is 1 when you ARE pressing deadman button
-    cut = cut + 1;
-    if (cut > 50) {
-      cut = 50; //if cut is 100 takes 1 second off the deadman before motors actually cut
-    }
-    }
-
-
-    if (cut == 0) {
-    level = 0;
-    Steer = 0;
-    motor_stop();
-
-
-    while (1) {   //loops endlessly until reset
-
-
-      delay(500);
-      pinMode(ledonePin, HIGH);
-      pinMode(ledtwoPin, HIGH);
-
-      delay(500);
-      pinMode(ledonePin, LOW);
-      pinMode(ledtwoPin, LOW);
-
-
-
-    } // end of while 1
-    }   //end of if cut == 0
-
-    //cut is not 0 so we therefore enact the specified command to the motors
-  */
+  }
 
   cSpeedVal_Motor1 = map (Motor1percent, -100, 100, -255, 255);
   cSpeedVal_Motor2 = map (Motor2percent, -100, 100, -255, 255);
@@ -755,7 +643,6 @@ void set_motor()   {
   Serial.println(cSpeedVal_Motor1);
   Serial.println(cSpeedVal_Motor2);
 
-  //delay(2000);
 }
 
 void motor_drive(int motor, int direct, int power)
